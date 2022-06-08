@@ -14,6 +14,13 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiAP.h>
+#include <XBee.h>
+
+
+XBee xbee = XBee();
+uint8_t payload[] = {0};
+XBeeAddress64 addr64 = XBeeAddress64(0xfffffffff,0xfffffffff);
+
 
 const int ledPin =  4;
 
@@ -30,6 +37,7 @@ void setup() {
   //pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.begin(115200);
+  xbee.setSerial(Serial);
   pinMode(ledPin, OUTPUT);
   
   Serial.println();
@@ -47,7 +55,7 @@ void setup() {
 
 void loop() {
   WiFiClient client = server.available();   // listen for incoming clients
-
+  
   if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
@@ -67,8 +75,8 @@ void loop() {
             client.println();
 
             // the content of the HTTP response follows the header:
-            //client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
-            //client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+            client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
+            client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
 
             // The HTTP response ends with another blank line:
             client.println();
@@ -85,10 +93,22 @@ void loop() {
         if (currentLine.endsWith("GET /H")) {
           client.println("Client message HIGH");
           digitalWrite(ledPin, HIGH);               // GET /H turns the LED on
+
+          //Send message to zigbee
+          payload[0]='h';
+          ZBTxRequest zigMsg = ZBTxRequest(addr64,payload,sizeof(payload));
+          xbee.send(zigMsg);
+          Serial.println("Message Low sent to zigbbe network");
         }
         if (currentLine.endsWith("GET /L")) {
           client.println("Client message LOW");
           digitalWrite(ledPin, LOW);                // GET /L turns the LED off
+
+          //Send message to zigbee
+          payload[0]='l';
+          ZBTxRequest zigMsg = ZBTxRequest(addr64,payload,sizeof(payload));
+          xbee.send(zigMsg);
+          Serial.println("Message High sent to zigbbe network");
         }
       }
     }

@@ -53,7 +53,7 @@ void setup()
 void loop()
 {
 
-    delay(100);
+    delay(1000);
     Serial.println(++value);
 
     Serial.print("connecting to ");
