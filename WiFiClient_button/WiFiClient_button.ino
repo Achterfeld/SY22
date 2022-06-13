@@ -108,7 +108,9 @@ void loop()
     while(client.available()) {
         String line = client.readStringUntil('\r');
         Serial.print(line);
-        digitalWrite(ledrecuPin, HIGH);
+        if(line == "Client message LOW"){
+          Serial.println("\nRecieve L !!!");
+          digitalWrite(ledrecuPin, HIGH);}
     }
 
     Serial.println();
