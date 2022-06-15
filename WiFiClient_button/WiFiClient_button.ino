@@ -16,7 +16,7 @@ int httpCode;
 String url;
 WiFiClient client;
 
-const int ledrecuPin = 4;
+const int ledMsgExt = 4;
 const int buttonPin = 2;
 int buttonState;
 
@@ -31,7 +31,7 @@ int value = 0;
 void setup()
 {
     Serial.begin(115200);
-    pinMode(ledrecuPin, OUTPUT);
+    pinMode(ledMsgExt, OUTPUT);
     pinMode(buttonPin, INPUT_PULLUP);
     delay(10);
 
@@ -76,7 +76,7 @@ void loop()
     if (buttonState == HIGH)
     {
       url = "/H";
-      digitalWrite(ledrecuPin, LOW);
+      //digitalWrite(ledMsgExt, LOW);
     } 
     else
     {
@@ -108,9 +108,13 @@ void loop()
     while(client.available()) {
         String line = client.readStringUntil('\r');
         Serial.print(line);
-        if(line == "Client message LOW"){
+        if(line == "External message LOW"){
           Serial.println("\nRecieve L !!!");
-          digitalWrite(ledrecuPin, HIGH);}
+          digitalWrite(ledMsgExt, LOW);}
+          
+        if(line == "External message HIGH"){
+          Serial.println("\nRecieve H !!!");
+          digitalWrite(ledMsgExt, HIGH);}
     }
 
     Serial.println();

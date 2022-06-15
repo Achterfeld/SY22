@@ -16,14 +16,19 @@
 #include <WiFiAP.h>
 #include <XBee.h>
 
-
+// configuration for the xbee part
 XBee xbee = XBee();
-uint8_t payload[] = {0};
-XBeeAddress64 addr64 = XBeeAddress64(0xfffffffff,0xfffffffff);
+XBeeAddress64 remoteAddress = XBeeAddress64(0xfffffffff,0xfffffffff);
+uint8_t d0[] = { 'D', '0' }; 
+uint8_t High[] = { 0x5 };
+uint8_t Low[] = { 0x4 };
+// Create a remote AT request with the D0 pin
+RemoteAtCommandRequest requestH = RemoteAtCommandRequest(remoteAddress, d0, High, sizeof(High));
+RemoteAtCommandRequest requestL = RemoteAtCommandRequest(remoteAddress, d0, Low, sizeof(Low));
 
 
 const int ledPin =  4;
-
+const int extIn =  9; // external message
 //#define LED_BUILTIN 2   // Set the GPIO pin where you connected your test LED or comment this line out if your dev board has a built-in LED
 
 // Set these to your desired credentials.
@@ -38,7 +43,9 @@ void setup() {
 
   Serial.begin(115200);
   xbee.setSerial(Serial);
+  delay(2000);
   pinMode(ledPin, OUTPUT);
+  pinMode(extIn, INPUT);
   
   Serial.println();
   Serial.println("Configuring access point...");
@@ -55,8 +62,8 @@ void setup() {
 
 void loop() {
   WiFiClient client = server.available();   // listen for incoming clients
-  
-  if (client) {                             // if you get a client,
+  delay(100);
+  if (client) {  // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
@@ -73,7 +80,12 @@ void loop() {
             client.println("HTTP/1.1 200 OK");
             client.println("Content-type:text/html");
             client.println();
-
+            if (digitalRead(extIn) == HIGH){
+              client.println("External message HIGH<br>");
+        }
+            else{
+              client.println("External message LOW<br>");
+        }
             // the content of the HTTP response follows the header:
             client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
             client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
@@ -91,25 +103,25 @@ void loop() {
 
         // Check to see if the client request was "GET /H" or "GET /L":
         if (currentLine.endsWith("GET /H")) {
-          client.println("Client message HIGH");
+          
           digitalWrite(ledPin, HIGH);               // GET /H turns the LED on
 
           //Send message to zigbee
-          payload[0]='h';
-          ZBTxRequest zigMsg = ZBTxRequest(addr64,payload,sizeof(payload));
-          xbee.send(zigMsg);
-          Serial.println("Message Low sent to zigbbe network");
+          xbee.send(requestH);
+          Serial.println("Message High sent to zigbbe network");
+
         }
         if (currentLine.endsWith("GET /L")) {
-          client.println("Client message LOW");
           digitalWrite(ledPin, LOW);                // GET /L turns the LED off
 
           //Send message to zigbee
-          payload[0]='l';
-          ZBTxRequest zigMsg = ZBTxRequest(addr64,payload,sizeof(payload));
-          xbee.send(zigMsg);
-          Serial.println("Message High sent to zigbbe network");
+          xbee.send(requestL);
+          Serial.println("Message Low sent to zigbee network");
+
         }
+        
+        
+        
       }
     }
     // close the connection:
