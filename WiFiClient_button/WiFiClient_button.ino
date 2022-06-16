@@ -73,7 +73,7 @@ void loop()
 
     buttonState = digitalRead(buttonPin);
     // We now create a URI for the request
-    if (buttonState == HIGH)
+    if (buttonState == LOW)
     {
       url = "/H";
       //digitalWrite(ledMsgExt, LOW);
@@ -108,11 +108,11 @@ void loop()
     while(client.available()) {
         String line = client.readStringUntil('\r');
         Serial.print(line);
-        if(line == "External message LOW"){
+        if(line.indexOf("LOW") > 0){
           Serial.println("\nRecieve L !!!");
           digitalWrite(ledMsgExt, LOW);}
           
-        if(line == "External message HIGH"){
+        if(line.indexOf("HIGH") > 0){
           Serial.println("\nRecieve H !!!");
           digitalWrite(ledMsgExt, HIGH);}
     }
